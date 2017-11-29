@@ -51,12 +51,13 @@ public class ProcImpl extends UnicastRemoteObject implements ProcInterface {
 		}
 	}
 	
-	public void broadcast(String i_msg) throws RemoteException {
+	public void broadcast(String i_msg) throws RemoteException, InterruptedException {
 		for (int iter = 0; iter != procURLList_.size(); ++iter) {
 			if (iter == processID_) {
 				System.err.println("Broadcasting: " + i_msg);
 			}
 			else {
+				Thread.sleep(randomNumber(2000, 5000));
 				processHandles_.get(iter).receiveMessage(i_msg);
 			}
 		}

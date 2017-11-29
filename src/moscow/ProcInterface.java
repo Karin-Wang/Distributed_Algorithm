@@ -1,4 +1,4 @@
-package victoria;
+package moscow;
 
 import java.net.MalformedURLException;
 import java.rmi.NotBoundException;

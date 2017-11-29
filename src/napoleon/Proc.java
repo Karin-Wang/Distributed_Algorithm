@@ -23,9 +23,9 @@ public class Proc {
 			"Berlin",
 			"Paris" ));
 	private static ArrayList<String> procAddressList_ = new ArrayList<String>(Arrays.asList(
-			"//192.168.1.3:117/",
-			"//192.168.1.3:118/",
-			"//192.168.1.12:119/" ));
+			"//127.0.0.1:1099/",
+			"//127.0.0.1:1099/",
+			"//127.0.0.1:1099/" ));
 	private static ArrayList<Integer> procStatusList_ = new ArrayList<Integer>(Arrays.asList(0, 0, 0));
 	private static int localID_;
 	
@@ -82,7 +82,7 @@ public class Proc {
 		
 		// This is not a good way to do it, but Im doing it anyway cuz Im lazy.
 		if (localID_ == 0) {
-			Thread.sleep(randomNumber(5000, 7000));
+			//Thread.sleep(randomNumber(5000, 7000));
 			localImpl_.broadcast("My very first broadcast.");
 		}
 		else if (localID_ == 1) {
