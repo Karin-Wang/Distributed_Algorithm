@@ -77,7 +77,7 @@ public class Boule {
 		if (debugFlagPrintList)
 			for (int iter = 0; iter < citizenCount; ++iter)
 				System.err.println("Citizen." + (iter + 1) + ": " + citizenList.get(iter) + "\tPopularity: " + citizenPopularity.get(iter));
-		System.err.println("");
+		//System.err.println("");
 
 		// Init process
 		Citizen.citizenList = citizenList;
@@ -89,13 +89,6 @@ public class Boule {
 		}
 		System.err.println("");
 		
-		// Show neibours
-		Boolean debugShowNeibours = true;
-		if (debugShowNeibours)
-			for (int iter = 0; iter < citizenCount; ++iter)
-				citizenPointer.get(iter).printNeighbours();
-		System.err.println("");
-		
 		// Collect process remote handles.
 		// Not sure if I need this here in Boule.
 		// But I did it nevertheless
@@ -104,21 +97,94 @@ public class Boule {
 		for (int iter = 0; iter < citizenCount; ++iter) {
 			citizenRemoteHandle.add(citizenPointer.get(iter).registerHimself());	
 		}
-		System.err.println("");
+		//System.err.println("");
+		
+		// Show neibours
+		Boolean debugShowNeibours = false;
+		if (debugShowNeibours)
+			for (int iter = 0; iter < citizenCount; ++iter)
+				citizenRemoteHandle.get(iter).printNeighbours();
+		//System.err.println("");
 		
 		// Tell process to find their neibours remotely
 		for (int iter = 0; iter < citizenCount; ++iter) {
-			citizenPointer.get(iter).findNeighbourRemoteHandle();
-			System.err.println("");
+			citizenRemoteHandle.get(iter).findNeighbourRemoteHandle();
+			//System.err.println("");
 		}
-		System.err.println("");
+		//System.err.println("");
 		
 		// Election time.
 		// MAKE ATHENS GREAT AGAIN
 		
 		// While the leader is not deicied, keep doing the loop
-			// Round N
+		int strategosID = 0;
+		int electionRound = 0;
+		while (true) {
+			electionRound += 1;
 			
+			// Debug message
+			System.err.println("Election Round " + electionRound);
+			System.err.println("Current citizens still in the election:");
+			for (int iter = 0; iter < citizenCount; ++iter)
+				if (!citizenRemoteHandle.get(iter).isPassive())
+					for (int jter = 0; jter < citizenCount; ++jter)
+						if (citizenRemoteHandle.get(jter).getPopularity() == citizenRemoteHandle.get(iter).getPopularityElec()) {
+							System.err.println(citizenRemoteHandle.get(jter).getName());
+							break;
+						}
+			System.err.println("");
+
+			// Find the first citizen that is still active
+			int entry = 0;
+			for (int iter = 0; iter < citizenCount; ++iter)
+				if (!citizenRemoteHandle.get(iter).isPassive()) {
+					entry = iter;
+					break;
+				}
+			
+			// How many citizens are passive now?
+			int passiveCount = 0;
+			for (int iter = 0; iter < citizenCount; ++iter)
+				if (citizenRemoteHandle.get(iter).isPassive())
+					passiveCount += 1;
+			
+			// If there is only one survivor...
+			if (passiveCount == citizenCount - 1) {
+				strategosID = entry;
+				break;
+			}
+			
+			//Send pop value downstream
+			for (int iter = entry; iter < citizenCount; ++iter) {
+				citizenRemoteHandle.get(iter).sendPopularityToNext();
+			}
+			for (int iter = 0; iter < entry; ++iter) {
+				citizenRemoteHandle.get(iter).sendPopularityToNext();
+			}
+			
+			//Send max downstream
+			for (int iter = entry; iter < citizenCount; ++iter) {
+				citizenRemoteHandle.get(iter).sendMaxToNext();
+			}
+			for (int iter = 0; iter < entry; ++iter) {
+				citizenRemoteHandle.get(iter).sendMaxToNext();
+			}
+			
+			//Compare nid, id, nnid
+			for (int iter = entry; iter < citizenCount; ++iter) {
+				citizenRemoteHandle.get(iter).comparePopularityValues();
+			}
+			for (int iter = 0; iter < entry; ++iter) {
+				citizenRemoteHandle.get(iter).comparePopularityValues();
+			}
+		}
+		String strategosName = null;
+		for (int iter = 0; iter < citizenCount; ++iter)
+			if (citizenRemoteHandle.get(iter).getPopularity() == citizenRemoteHandle.get(strategosID).getPopularityElec()) {
+				strategosName = citizenRemoteHandle.get(iter).getName();
+				break;
+			}
+		System.err.println("The strategos elected is " + strategosName + '.');
 		
 		
 
