@@ -25,7 +25,7 @@ public class Proc {
 	private static ArrayList<String> procAddressList_ = new ArrayList<String>(Arrays.asList(
 			"//127.0.0.1:1099/",
 			"//127.0.0.1:1099/",
-			"//127.0.0.1:1099/" ));
+			"//145.94.204.176:1099/" ));
 	private static ArrayList<Integer> procStatusList_ = new ArrayList<Integer>(Arrays.asList(0, 0, 0));
 	private static int localID_;
 	
