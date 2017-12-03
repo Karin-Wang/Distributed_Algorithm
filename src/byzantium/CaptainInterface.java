@@ -7,4 +7,6 @@ import java.util.ArrayList;
 public interface CaptainInterface extends Remote {
 	public String getName() throws RemoteException;
 	public void setCapList(ArrayList<CaptainInterface> in_list) throws RemoteException;
+	public void recvMessage(String in_sender, String in_msg) throws RemoteException, InterruptedException;
+	public void broadcastToCols(String in_msg, int in_sendChance, int in_msgCorrectChance) throws RemoteException;
 }

@@ -6,6 +6,7 @@ import java.rmi.NotBoundException;
 import java.rmi.RemoteException;
 import java.rmi.server.UnicastRemoteObject;
 import java.util.ArrayList;
+import java.util.Random;
 
 public class CaptainImpl extends UnicastRemoteObject implements CaptainInterface{
 // Fields
@@ -45,6 +46,14 @@ public class CaptainImpl extends UnicastRemoteObject implements CaptainInterface
 		operation();
 	}
 // Methods
+	private static int randomNumber(int min, int max){
+		Random r = new Random();
+		return r.nextInt(max-min) + min;
+	}
+	private static boolean randomCheck(int in_th) {
+		if (randomNumber(0, 100) < in_th) return true;
+		else return false;
+	}
 	private void operation() {
 		if (DEBUG_FLAG && true) DebugTool.print(name_ + " has finished prep. Entering operation stage.");
 	}
@@ -62,5 +71,50 @@ public class CaptainImpl extends UnicastRemoteObject implements CaptainInterface
 		if (DEBUG_FLAG && true) 
 			DebugTool.print(tempStr);
 		isPrepFinished = true;
+	}
+	@Override
+	public void recvMessage(String in_sender, String in_msg) throws RemoteException, InterruptedException {
+		Thread.sleep(5000);
+		DebugTool.print(in_sender + " says: " + in_msg);
+	}
+	@Override
+	public void broadcastToCols(String in_msg, int in_sendChance, int in_msgCorrectChance) throws RemoteException {
+		// in_sendChance and in_msgCorrectChance should be determined in operation(). 
+		// They range from 0-1. Values lower than 0 will be treated as 0, and value above 100 will be treated as 100.
+		// if the process is loyal, in_msgCorrectChance should be 1, and in_msgCorrectChance should be 1.
+		if (in_sendChance > 100) in_sendChance = 100;
+		if (in_msgCorrectChance > 100) in_msgCorrectChance = 100;
+		if (in_sendChance < 0) in_sendChance = 0;
+		if (in_msgCorrectChance < 0) in_msgCorrectChance = 0;
+		
+		if (DEBUG_FLAG && true) DebugTool.print("Broadcasting... Message: " + in_msg);
+		
+		ArrayList<ThreadBroadcast> threadList = new ArrayList<ThreadBroadcast>();
+		for (int iter = 0; iter < colList_.size(); ++iter) {
+			String msg = in_msg;
+			
+			// If the check is not passed, dont do anything for this captain.
+			if (!randomCheck(in_sendChance)) {
+				if (DEBUG_FLAG && true) DebugTool.print("Skip sending message to " + colList_.get(iter).getName());
+				continue;
+			}
+			
+			// If the check is not passed, change message to false message.
+			if (!randomCheck(in_msgCorrectChance)) {
+				if (DEBUG_FLAG && true) DebugTool.print("Falsifying message to " + colList_.get(iter).getName());
+				msg = "The general says we should retreat.";
+			}
+			else {
+				if (DEBUG_FLAG && true) DebugTool.print("Sending true message to " + colList_.get(iter).getName());
+			}
+			
+			threadList.add(new ThreadBroadcast(name_, colList_.get(iter), msg, randomNumber(3000, 6000)));
+		}
+		
+		for (ThreadBroadcast threadIter : threadList) {
+			threadIter.start();
+		}
+		
+		if (DEBUG_FLAG && true) DebugTool.print("");
 	}
 }
