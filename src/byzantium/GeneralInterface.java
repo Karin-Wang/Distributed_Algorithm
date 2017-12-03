@@ -1,10 +1,9 @@
 package byzantium;
 
-public interface GeneralInterface extends PersonInterface {
-	// Fields
-	// Constructors
-	// Main
-	// Methods
-	// Getters & Setters
-	// Remote Methods
+import java.rmi.Remote;
+import java.rmi.RemoteException;
+
+public interface GeneralInterface extends Remote {
+	public void registerCaptain(CaptainInterface in_capHandle) throws RemoteException;
+	public String getName() throws RemoteException;
 }
