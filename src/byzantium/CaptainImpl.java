@@ -11,7 +11,7 @@ import java.util.Random;
 public class CaptainImpl extends UnicastRemoteObject implements CaptainInterface{
 // Fields
 	private static final long serialVersionUID = 1L;
-	private static boolean DEBUG_FLAG = true;
+	private static boolean DEBUG_FLAG = false;
 	private String name_ = "Captain";
 	private String genName_ = "General";
 	private String genIP_ = "127.0.0.1";
@@ -54,8 +54,9 @@ public class CaptainImpl extends UnicastRemoteObject implements CaptainInterface
 		if (randomNumber(0, 100) < in_th) return true;
 		else return false;
 	}
-	private void operation() {
+	private void operation() throws RemoteException {
 		if (DEBUG_FLAG && true) DebugTool.print(name_ + " has finished prep. Entering operation stage.");
+
 	}
 // Getters & Setters
 // Remote Methods
@@ -74,8 +75,9 @@ public class CaptainImpl extends UnicastRemoteObject implements CaptainInterface
 	}
 	@Override
 	public void recvMessage(String in_sender, String in_msg) throws RemoteException, InterruptedException {
-		Thread.sleep(5000);
-		DebugTool.print(in_sender + " says: " + in_msg);
+		//Thread.sleep(5000);
+		//DebugTool.print(in_sender + " says: " + in_msg);
+		genHandle_.writeLog("[" + in_sender + "]" + "-->" + "[" + name_ + "]" + " Msg Recv" + " - \"" + in_msg + "\"");
 	}
 	@Override
 	public void broadcastToCols(String in_msg, int in_sendChance, int in_msgCorrectChance) throws RemoteException {
@@ -88,6 +90,7 @@ public class CaptainImpl extends UnicastRemoteObject implements CaptainInterface
 		if (in_msgCorrectChance < 0) in_msgCorrectChance = 0;
 		
 		if (DEBUG_FLAG && true) DebugTool.print("Broadcasting... Message: " + in_msg);
+		genHandle_.writeLog("[" + name_ + "]" + " " + "Init Broadcast.");
 		
 		ArrayList<ThreadBroadcast> threadList = new ArrayList<ThreadBroadcast>();
 		for (int iter = 0; iter < colList_.size(); ++iter) {
@@ -96,6 +99,7 @@ public class CaptainImpl extends UnicastRemoteObject implements CaptainInterface
 			// If the check is not passed, dont do anything for this captain.
 			if (!randomCheck(in_sendChance)) {
 				if (DEBUG_FLAG && true) DebugTool.print("Skip sending message to " + colList_.get(iter).getName());
+				genHandle_.writeLog("[" + name_ + "]" + "-->" + "[" + colList_.get(iter).getName() + "]" + " Cancel Msg");
 				continue;
 			}
 			
@@ -103,12 +107,14 @@ public class CaptainImpl extends UnicastRemoteObject implements CaptainInterface
 			if (!randomCheck(in_msgCorrectChance)) {
 				if (DEBUG_FLAG && true) DebugTool.print("Falsifying message to " + colList_.get(iter).getName());
 				msg = "The general says we should retreat.";
+				genHandle_.writeLog("[" + name_ + "]" + "-->" + "[" + colList_.get(iter).getName() + "]" + " Falsify Msg");
 			}
 			else {
 				if (DEBUG_FLAG && true) DebugTool.print("Sending true message to " + colList_.get(iter).getName());
+				genHandle_.writeLog("[" + name_ + "]" + "-->" + "[" + colList_.get(iter).getName() + "]" + " Send True Msg");
 			}
 			
-			threadList.add(new ThreadBroadcast(name_, colList_.get(iter), msg, randomNumber(3000, 6000)));
+			threadList.add(new ThreadBroadcast(name_, colList_.get(iter), msg, randomNumber(3000, 6000), genHandle_, name_, colList_.get(iter).getName()));
 		}
 		
 		for (ThreadBroadcast threadIter : threadList) {

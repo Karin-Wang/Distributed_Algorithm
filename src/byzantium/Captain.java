@@ -6,7 +6,7 @@ import java.rmi.RemoteException;
 
 public class Captain {
 // Fields
-	private static boolean DEBUG_FLAG = true;
+	private static boolean DEBUG_FLAG = false;
 // Constructors
 // Main
 	// java byzantium.Captain -(String)[ip of General] -(boolean)[is loyal] -(String)[Captain name]
