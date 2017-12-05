@@ -25,6 +25,8 @@ public class GeneralImpl extends UnicastRemoteObject implements GeneralInterface
 	// This list contains all caps
 	ArrayList<CaptainInterface> capList_ = new ArrayList<CaptainInterface>();
 	ArrayList<String> logBuffer_ = new ArrayList<String>();
+	ArrayList<Integer> decisionList_ = new ArrayList<Integer>();
+	private boolean consensusReached = false;
 // Constructors
 	protected GeneralImpl(int in_capCount, boolean in_isLoyal) throws RemoteException, InterruptedException, MalformedURLException, NotBoundException {
 		super();
@@ -40,7 +42,7 @@ public class GeneralImpl extends UnicastRemoteObject implements GeneralInterface
 		
 		// Wait for caps
 		while (capList_.size() != capCount_) {Thread.sleep(1000);}
-		if (DEBUG_FLAG && true) DebugTool.print("All captains reported in.");
+		//if (DEBUG_FLAG && true) DebugTool.print("All captains reported in.");
 		writeLog("[" + name_ + "]" + " " + "All Captains Rdy");
 		
 		// Get disloyal captain count
@@ -55,12 +57,14 @@ public class GeneralImpl extends UnicastRemoteObject implements GeneralInterface
 		
 		// Tell each cap how to contact other caps
 		for (int i = 0; i < capList_.size(); ++i) {
+			/*
 			ArrayList<CaptainInterface> tempList = new ArrayList<CaptainInterface>();
 			for (int j = 0; j < capList_.size(); ++j) {
-				if (i==j) continue;
+				//if (i==j) continue;
 				tempList.add(capList_.get(j));
 			}
-			capList_.get(i).setCapList(tempList);
+			*/
+			capList_.get(i).setCapList(capList_);
 		}
 		
 		// Operation
@@ -91,6 +95,16 @@ public class GeneralImpl extends UnicastRemoteObject implements GeneralInterface
 			//capList_.get(2).broadcastToCols("The general says we should attack.", 80, 50);
 		//}
 	/* The section above is for tesing only. */
+		
+		while (decisionList_.size() != capCount_) {
+			Thread.sleep(1000);
+		}
+		
+		writeLog("[" + name_ + "]" + " " + "Consensus reached: " + decisionList_.get(0));
+		consensusReached = true;
+		//for (CaptainInterface iter : capList_)
+		//	iter.shutdown();
+		//System.exit(0);
 		
 	}
 	private void broadcastToCaps(String in_msg, int in_sendChance, int in_msgCorrectChance) throws RemoteException, InterruptedException {
@@ -128,7 +142,8 @@ public class GeneralImpl extends UnicastRemoteObject implements GeneralInterface
 				writeLog("[" + name_ + "]" + "-->" + "[" + capList_.get(iter).getName() + "]" + " Send True Msg");
 			}
 			
-			threadList.add(new ThreadBroadcast(name_, capList_.get(iter), msg, randomNumber(3000, 6000), handleSelf_, name_, capList_.get(iter).getName()));
+			// 0 is a placeholder
+			threadList.add(new ThreadBroadcast(name_, capList_.get(iter), 0, randomNumber(3000, 6000), handleSelf_, name_, capList_.get(iter).getName()));
 		}
 		
 		for (ThreadBroadcast threadIter : threadList) {
@@ -148,6 +163,7 @@ public class GeneralImpl extends UnicastRemoteObject implements GeneralInterface
 	public String getName() throws RemoteException {return name_;}
 	@Override
 	public void writeLog(String in_log) throws RemoteException {
+		if(consensusReached) return;
 		Date date=new Date(); 
 		DebugTool.print(new SimpleDateFormat("HH:mm:ss'.'SSS").format(date) + " " + in_log);
 	}
@@ -155,5 +171,14 @@ public class GeneralImpl extends UnicastRemoteObject implements GeneralInterface
 	public void bufferLog(String in_log) throws RemoteException {
 		// TODO Auto-generated method stub
 		
+	}
+	@Override
+	public void decisionMade(String in_sender, int in_dec) throws RemoteException {
+		decisionList_.add(in_dec);
+		writeLog("[" + in_sender + "]" + " Final: " + in_dec);
+	}
+	@Override
+	public boolean isConsensusReached() throws RemoteException {
+		return consensusReached;
 	}
 }

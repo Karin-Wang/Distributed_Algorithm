@@ -8,4 +8,6 @@ public interface GeneralInterface extends Remote {
 	public String getName() throws RemoteException;
 	public void writeLog(String in_log) throws RemoteException;
 	public void bufferLog(String in_log) throws RemoteException;
+	public void decisionMade(String in_sender, int in_dec) throws RemoteException;
+	public boolean isConsensusReached() throws RemoteException;
 }
