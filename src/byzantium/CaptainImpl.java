@@ -20,6 +20,14 @@ public class CaptainImpl extends UnicastRemoteObject implements CaptainInterface
 	private int disloyalCapCount_ = 0;
 	private boolean isLoyal_ = false;
 	private boolean isPrepFinished = false;
+	
+	// Consensus related
+	private int round_ = 0;
+	private boolean decided_ = false;
+	private boolean toAttack_ = false;
+	private boolean decision_ = false;
+	private ArrayList<Boolean> roundMsg = new ArrayList<Boolean>();
+	
 	// This list does not contain the cap himself
 	ArrayList<CaptainInterface> colList_ = new ArrayList<CaptainInterface>();
 // Constructors
@@ -28,6 +36,10 @@ public class CaptainImpl extends UnicastRemoteObject implements CaptainInterface
 		name_ = in_capName;
 		genIP_ = in_genIP;
 		isLoyal_ = in_isLoyal;
+		
+		// By default, loyal captains should decide to attack.
+		toAttack_ = true;
+		
 		try {
 			Naming.rebind(name_, this);
 		} catch (Exception e) {	DebugTool.printAndExit(name_ + " rebind failure.");}
@@ -55,9 +67,30 @@ public class CaptainImpl extends UnicastRemoteObject implements CaptainInterface
 		if (randomNumber(0, 100) < in_th) return true;
 		else return false;
 	}
-	private void operation() throws RemoteException {
+	private void operation() throws RemoteException, InterruptedException {
 		if (DEBUG_FLAG && true) DebugTool.print(name_ + " has finished prep. Entering operation stage.");
 
+		decision_ = toAttack_;
+		
+		while (!decided_) {
+			++round_;
+			roundMsg.clear();
+			roundMsg.add(decision_);
+			
+			genHandle_.writeLog("[" + name_ + "]" + " Begin round " + round_);
+			if (isLoyal_)
+				broadcastToCols(String.valueOf(decision_), 100, 100);
+			else
+				broadcastToCols(String.valueOf(decision_), 50, 50);
+			
+			while (roundMsg.size() != capCount_ - disloyalCapCount_) {
+				Thread.sleep(250);
+			}
+			genHandle_.writeLog("[" + name_ + "]" + " recv msg from " + (capCount_ - disloyalCapCount_) + " caps");
+		}
+		
+		
+		
 	}
 // Getters & Setters
 // Remote Methods
@@ -78,6 +111,7 @@ public class CaptainImpl extends UnicastRemoteObject implements CaptainInterface
 	public void recvMessage(String in_sender, String in_msg) throws RemoteException, InterruptedException {
 		//Thread.sleep(5000);
 		//DebugTool.print(in_sender + " says: " + in_msg);
+		roundMsg.add(Boolean.parseBoolean(in_msg));
 		genHandle_.writeLog("[" + in_sender + "]" + "-->" + "[" + name_ + "]" + " Msg Recv" + " - \"" + in_msg + "\"");
 	}
 	@Override
@@ -96,6 +130,7 @@ public class CaptainImpl extends UnicastRemoteObject implements CaptainInterface
 		ArrayList<ThreadBroadcast> threadList = new ArrayList<ThreadBroadcast>();
 		for (int iter = 0; iter < colList_.size(); ++iter) {
 			String msg = in_msg;
+			boolean check = Boolean.parseBoolean(in_msg);
 			
 			// If the check is not passed, dont do anything for this captain.
 			if (!randomCheck(in_sendChance)) {
@@ -107,7 +142,7 @@ public class CaptainImpl extends UnicastRemoteObject implements CaptainInterface
 			// If the check is not passed, change message to false message.
 			if (!randomCheck(in_msgCorrectChance)) {
 				if (DEBUG_FLAG && true) DebugTool.print("Falsifying message to " + colList_.get(iter).getName());
-				msg = "The general says we should retreat.";
+				msg = String.valueOf(!check);
 				genHandle_.writeLog("[" + name_ + "]" + "-->" + "[" + colList_.get(iter).getName() + "]" + " Falsify Msg");
 			}
 			else {
