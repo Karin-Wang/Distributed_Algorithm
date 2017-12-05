@@ -20,6 +20,7 @@ public class GeneralImpl extends UnicastRemoteObject implements GeneralInterface
 	private String name_ = "General";
 	private int capCount_ = 0;
 	private boolean isLoyal_ = false;
+	private int disloyalCapCount_ = 0;
 	private GeneralInterface handleSelf_ = null;
 	// This list contains all caps
 	ArrayList<CaptainInterface> capList_ = new ArrayList<CaptainInterface>();
@@ -41,6 +42,16 @@ public class GeneralImpl extends UnicastRemoteObject implements GeneralInterface
 		while (capList_.size() != capCount_) {Thread.sleep(1000);}
 		if (DEBUG_FLAG && true) DebugTool.print("All captains reported in.");
 		writeLog("[" + name_ + "]" + " " + "All Captains Rdy");
+		
+		// Get disloyal captain count
+		for (CaptainInterface iter : capList_) 
+			if (iter.isDisloyal())
+				++disloyalCapCount_;
+		writeLog("[" + name_ + "]" + " " + disloyalCapCount_ + " Disloyal Cap");
+		
+		for (CaptainInterface iter : capList_) 
+			iter.notifyDisloyalCount(capCount_, disloyalCapCount_);
+		
 		
 		// Tell each cap how to contact other caps
 		for (int i = 0; i < capList_.size(); ++i) {
@@ -66,18 +77,18 @@ public class GeneralImpl extends UnicastRemoteObject implements GeneralInterface
 	}
 	private void operation() throws InterruptedException, RemoteException {
 		if (DEBUG_FLAG && true) DebugTool.print(name_ + " has finished prep. Entering operation stage.");
-		Thread.sleep(3000);
+		//Thread.sleep(3000);
 		
 	/* This section is for tesing only. */
 		// TODO: write functions to determine the chance to send, and chance to send correct msg.
 		// 67 and 50 should give it around 50% to send true message.
-		broadcastToCaps("The order is to attack.", 80, 50);
+		//broadcastToCaps("The order is to attack.", 100, 100);
 		//if (DEBUG_FLAG && true) DebugTool.print("Broadcasting completed...\n");
 		
 		// Test broadcasting for captain_2
 		//for (int iter = 0; iter < capList_.size(); ++iter) {
-			Thread.sleep(10000);
-			capList_.get(2).broadcastToCols("The general says we should attack.", 80, 50);
+			//Thread.sleep(10000);
+			//capList_.get(2).broadcastToCols("The general says we should attack.", 80, 50);
 		//}
 	/* The section above is for tesing only. */
 		

@@ -15,7 +15,7 @@ public class General {
 	// Check args
 		if (args.length != 2) DebugTool.printAndExit("java byzantium.General -(int)[number of captains] -(boolean)[is loyal]");
 		int captainCount = Integer.parseInt(args[0]);
-		if (captainCount < 3) DebugTool.printAndExit("ERROR: At least 6 captains required.");
+		if (captainCount < 5) DebugTool.printAndExit("ERROR: At least 6 captains required.");
 		boolean isLoyal = Boolean.parseBoolean(args[1]);
 		
 		if (DEBUG_FLAG && true) DebugTool.print("captainCount = " + captainCount + "\nisLoyal = " + isLoyal);

@@ -17,6 +17,7 @@ public class CaptainImpl extends UnicastRemoteObject implements CaptainInterface
 	private String genIP_ = "127.0.0.1";
 	private GeneralInterface genHandle_ = null;
 	private int capCount_ = 0;
+	private int disloyalCapCount_ = 0;
 	private boolean isLoyal_ = false;
 	private boolean isPrepFinished = false;
 	// This list does not contain the cap himself
@@ -122,5 +123,14 @@ public class CaptainImpl extends UnicastRemoteObject implements CaptainInterface
 		}
 		
 		if (DEBUG_FLAG && true) DebugTool.print("");
+	}
+	@Override
+	public boolean isDisloyal() throws RemoteException {
+		return !isLoyal_;
+	}
+	@Override
+	public void notifyDisloyalCount(int in_count, int in_disCount) throws RemoteException {
+		capCount_ = in_count;
+		disloyalCapCount_ = in_disCount;
 	}
 }
