@@ -10,4 +10,7 @@ public interface GeneralInterface extends Remote {
 	public void bufferLog(String in_log) throws RemoteException;
 	public void decisionMade(String in_sender, int in_dec) throws RemoteException;
 	public boolean isConsensusReached() throws RemoteException;
+	public void readyForNextRound() throws RemoteException;
+	public void unreadyForNextRound() throws RemoteException;
+	public boolean isAllReady() throws RemoteException;
 }

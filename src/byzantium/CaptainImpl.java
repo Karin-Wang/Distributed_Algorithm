@@ -7,6 +7,7 @@ import java.rmi.RemoteException;
 import java.rmi.server.UnicastRemoteObject;
 import java.util.ArrayList;
 import java.util.Random;
+import java.util.concurrent.locks.ReentrantLock;
 
 //NOTE:
 //MSG TYPES
@@ -35,6 +36,11 @@ public class CaptainImpl extends UnicastRemoteObject implements CaptainInterface
 	private int localIdea_;
 	private ArrayList<Integer> notificationMsg = new ArrayList<Integer>();
 	private ArrayList<Integer> proposalMsg = new ArrayList<Integer>();
+	private ArrayList<Integer> notificationBuffer = new ArrayList<Integer>();
+	private ArrayList<Integer> notificationBufferRound = new ArrayList<Integer>();
+	private ArrayList<Integer> proposalMsgBuffer = new ArrayList<Integer>();
+	private ArrayList<Integer> proposalMsgBufferRound = new ArrayList<Integer>();
+	private boolean nextRoundRdy = false;
 	//private ArrayList<ArrayList<Integer> > notificationMsgList_ = new ArrayList<ArrayList<Integer> >();
 	//private ArrayList<ArrayList<Integer> > proposalMsgList_ = new ArrayList<ArrayList<Integer> >();
 	
@@ -83,11 +89,58 @@ public class CaptainImpl extends UnicastRemoteObject implements CaptainInterface
 		//notificationMsgList_.add(new ArrayList<Integer>());
 		//proposalMsgList_.add(new ArrayList<Integer>());
 		while (true) {
+			//nextRoundRdy = false;
+			//genHandle_.unreadyForNextRound();
+			//notificationMsg.clear();
+			//proposalMsg.clear();
 			
-			notificationMsg.clear();
-			proposalMsg.clear();
+			ReentrantLock lock = new ReentrantLock ();
+			lock.lock();
+			DebugTool.print("locking");
+			try {
+				++round_;
+				notificationMsg.clear();
+				proposalMsg.clear();
+				for (int iter = 0; iter < notificationBuffer.size(); ++iter)
+					if (notificationBufferRound.get(iter) == round_)
+						notificationMsg.add(notificationBuffer.get(iter));
+				for (int iter = 0; iter < proposalMsgBuffer.size(); ++iter)
+					if (proposalMsgBufferRound.get(iter) == round_)
+						proposalMsg.add(proposalMsgBuffer.get(iter));
+				
+				ArrayList<Integer> temp1 = new ArrayList<Integer>();
+				ArrayList<Integer> temp1r = new ArrayList<Integer>();
+				for (int iter = 0; iter < notificationBuffer.size(); ++iter)
+					if (notificationBufferRound.get(iter) > round_) {
+						temp1.add(notificationBuffer.get(iter));
+						temp1r.add(notificationBufferRound.get(iter));
+					}
+				ArrayList<Integer> temp2 = new ArrayList<Integer>();
+				ArrayList<Integer> temp2r = new ArrayList<Integer>();
+				for (int iter = 0; iter < proposalMsgBuffer.size(); ++iter)
+					if (proposalMsgBufferRound.get(iter) > round_) {
+						temp2.add(proposalMsgBuffer.get(iter));
+						temp2r.add(proposalMsgBufferRound.get(iter));
+					}
+				
+				notificationBuffer.clear();
+				notificationBufferRound.clear();
+				proposalMsgBuffer.clear();
+				proposalMsgBufferRound.clear();
+				
+				notificationBuffer = temp1;
+				notificationBufferRound = temp1r;
+				proposalMsgBuffer = temp2;
+				proposalMsgBufferRound = temp2r;
+				
+				
+				
+			} finally {
+				lock.unlock();
+				DebugTool.print("unlocking");
+			}
 			
-			genHandle_.writeLog("[" + name_ + "]" + " Begin round " + (round_+1));
+			genHandle_.writeLog("[" + name_ + "]" + " Begin round " + (round_));
 			DebugTool.print("Round " + round_);
 			if (isLoyal_)
 				broadcastToCols(localIdea_, 100, 100);
@@ -106,9 +159,9 @@ public class CaptainImpl extends UnicastRemoteObject implements CaptainInterface
 			int count_2 = 0;
 			int count_1 = 0;
 			for (int iter = 0; iter < capCount_ - disloyalCapCount_; ++iter) {
-				if (iter == 2)
+				if (notificationMsg.get(iter) == 2)
 					++count_2;
-				else if (iter == 1)
+				else if (notificationMsg.get(iter) == 1)
 					++count_1;
 			}
 			
@@ -155,11 +208,11 @@ public class CaptainImpl extends UnicastRemoteObject implements CaptainInterface
 			int count_n1 = 0;
 			int count_0 = 0;
 			for (int iter = 0; iter < capCount_ - disloyalCapCount_; ++iter) {
-				if (iter == -2)
+				if (proposalMsg.get(iter) == -2)
 					++count_n2;
-				else if (iter == -1)
+				else if (proposalMsg.get(iter)  == -1)
 					++count_n1;
-				else if (iter == 0)
+				else if (proposalMsg.get(iter)  == 0)
 					++count_0;
 			}
 			
@@ -192,8 +245,13 @@ public class CaptainImpl extends UnicastRemoteObject implements CaptainInterface
 				break;
 				*/
 			
-			++round_;
-			//notificationMsgList_.add(new ArrayList<Integer>());
+			
+			//genHandle_.readyForNextRound();
+			//while (!nextRoundRdy) {
+			//	Thread.sleep(100);
+			//	nextRoundRdy = genHandle_.isAllReady();
+			//}
+			///notificationMsgList_.add(new ArrayList<Integer>());
 			//proposalMsgList_.add(new ArrayList<Integer>());
 		}
 		
@@ -218,24 +276,29 @@ public class CaptainImpl extends UnicastRemoteObject implements CaptainInterface
 		isPrepFinished = true;
 	}
 	@Override
-	public void recvMessage(String in_sender, int in_msg) throws RemoteException, InterruptedException {
+	public synchronized void recvMessage(String in_sender, int in_msg, int i_round) throws RemoteException, InterruptedException {
 		//Thread.sleep(5000);
 		//DebugTool.print(in_sender + " says: " + in_msg);
-		
-		if (in_msg > 0) {// If the msg is from notification stage
-			//if(notificationMsg.size() < capCount_ - disloyalCapCount_)
-			
-			//if(notificationMsg.size() >=)
-			notificationMsg.add(in_msg);
-			
-			
+				
+		if (i_round < round_) return;
+		else if (i_round == round_) {
+			if (in_msg > 0) {
+				notificationMsg.add(in_msg);
+			} else {
+				proposalMsg.add(in_msg);
+			}
+		} else {
+			if (in_msg > 0) {
+				notificationBuffer.add(in_msg);
+				notificationBufferRound.add(i_round);
+			} else {
+				proposalMsgBuffer.add(in_msg);
+				proposalMsgBufferRound.add(i_round);
+			}
 		}
-		else {// If the msg is from proposal stage
-			//if(proposalMsg.size() < capCount_ - disloyalCapCount_)
-			proposalMsg.add(in_msg);
-		}
+
 			
-		//DebugTool.print("from " + in_sender + ": " + in_msg);
+		DebugTool.print("from " + in_sender + ": " + in_msg);
 			
 		//genHandle_.writeLog("[" + in_sender + "]" + "-->" + "[" + name_ + "]" + " Msg Recv" + " - \"" + in_msg + "\"");
 	}
@@ -249,7 +312,11 @@ public class CaptainImpl extends UnicastRemoteObject implements CaptainInterface
 		if (in_sendChance < 0) in_sendChance = 0;
 		if (in_msgCorrectChance < 0) in_msgCorrectChance = 0;
 		
-		//DebugTool.print("Broadcasting... Message: " + in_msg);
+
+		if (in_msg>0)
+			DebugTool.print("[" + name_ + "]" + " " + "Init N Broadcast.");
+		else
+			DebugTool.print("[" + name_ + "]" + " " + "Init P Broadcast.");
 		if (in_msg>0)
 			genHandle_.writeLog("[" + name_ + "]" + " " + "Init N Broadcast.");
 		else
@@ -286,7 +353,7 @@ public class CaptainImpl extends UnicastRemoteObject implements CaptainInterface
 				//genHandle_.writeLog("[" + name_ + "]" + "-->" + "[" + colList_.get(iter).getName() + "]" + " Send True Msg");
 			}
 			
-			threadList.add(new ThreadBroadcast(name_, colList_.get(iter), msg, randomNumber(500, 2000), genHandle_, name_, colList_.get(iter).getName()));
+			threadList.add(new ThreadBroadcast(name_, colList_.get(iter), msg, randomNumber(500, 2000), genHandle_, name_, colList_.get(iter).getName(), round_));
 		}
 		
 		for (ThreadBroadcast threadIter : threadList) {
@@ -305,7 +372,11 @@ public class CaptainImpl extends UnicastRemoteObject implements CaptainInterface
 		disloyalCapCount_ = in_disCount;
 	}
 	@Override
-	public void shutdown() throws RemoteException {
+	public synchronized void shutdown() throws RemoteException {
 		System.exit(0);
+	}
+	@Override
+	public void greenForNextRound() throws RemoteException {
+		nextRoundRdy = true;
 	}
 }

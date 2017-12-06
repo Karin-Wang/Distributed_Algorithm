@@ -23,9 +23,10 @@ public class GeneralImpl extends UnicastRemoteObject implements GeneralInterface
 	private int disloyalCapCount_ = 0;
 	private GeneralInterface handleSelf_ = null;
 	// This list contains all caps
-	ArrayList<CaptainInterface> capList_ = new ArrayList<CaptainInterface>();
-	ArrayList<String> logBuffer_ = new ArrayList<String>();
-	ArrayList<Integer> decisionList_ = new ArrayList<Integer>();
+	private ArrayList<CaptainInterface> capList_ = new ArrayList<CaptainInterface>();
+	private ArrayList<String> logBuffer_ = new ArrayList<String>();
+	private ArrayList<Integer> decisionList_ = new ArrayList<Integer>();
+	private int readyCount_ = 0;
 	private boolean consensusReached = false;
 // Constructors
 	protected GeneralImpl(int in_capCount, boolean in_isLoyal) throws RemoteException, InterruptedException, MalformedURLException, NotBoundException {
@@ -143,7 +144,7 @@ public class GeneralImpl extends UnicastRemoteObject implements GeneralInterface
 			}
 			
 			// 0 is a placeholder
-			threadList.add(new ThreadBroadcast(name_, capList_.get(iter), 0, randomNumber(3000, 6000), handleSelf_, name_, capList_.get(iter).getName()));
+			threadList.add(new ThreadBroadcast(name_, capList_.get(iter), 0, randomNumber(3000, 6000), handleSelf_, name_, capList_.get(iter).getName(), 0));
 		}
 		
 		for (ThreadBroadcast threadIter : threadList) {
@@ -180,5 +181,20 @@ public class GeneralImpl extends UnicastRemoteObject implements GeneralInterface
 	@Override
 	public boolean isConsensusReached() throws RemoteException {
 		return consensusReached;
+	}
+	@Override
+	public void readyForNextRound() throws RemoteException {
+		readyCount_ += 1;
+	}
+	@Override
+	public boolean isAllReady() throws RemoteException {
+		if (capCount_ == readyCount_) {
+			return true;
+		}
+		else return false;
+	}
+	@Override
+	public void unreadyForNextRound() throws RemoteException {
+		readyCount_ = 0;
 	}
 }
