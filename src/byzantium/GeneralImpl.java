@@ -103,6 +103,17 @@ public class GeneralImpl extends UnicastRemoteObject implements GeneralInterface
 		
 		writeLog("[" + name_ + "]" + " " + "Consensus reached: " + decisionList_.get(0));
 		consensusReached = true;
+		//for (CaptainInterface iter : capList_) {
+			//Date date=new Date(); 
+			
+			//ArrayList<Integer> temp = iter.getHistory(0);
+			//String str = new String(); 
+			//for (int jter : temp)
+			//	str += jter + ",";
+			///DebugTool.print(new SimpleDateFormat("HH:mm:ss'.'SSS").format(date) + " " + str);
+		//}
+		//System.exit(0);
+			
 		//for (CaptainInterface iter : capList_)
 		//	iter.shutdown();
 		//System.exit(0);
@@ -176,7 +187,12 @@ public class GeneralImpl extends UnicastRemoteObject implements GeneralInterface
 	@Override
 	public void decisionMade(String in_sender, int in_dec) throws RemoteException {
 		decisionList_.add(in_dec);
-		writeLog("[" + in_sender + "]" + " Final: " + in_dec);
+		String str = null;
+		if(in_dec == 2)
+			str = "A";
+		else if (in_dec == 1)
+			str = "R";
+		writeLog("[" + in_sender + "]" + " Final: " + str);
 	}
 	@Override
 	public boolean isConsensusReached() throws RemoteException {

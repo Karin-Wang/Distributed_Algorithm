@@ -19,6 +19,7 @@ public interface CaptainInterface extends Remote {
 	public void broadcastToCols(int in_msg, int in_sendChance, int in_msgCorrectChance) throws RemoteException;
 	public boolean isDisloyal() throws RemoteException;
 	public void notifyDisloyalCount(int in_count, int in_disCount) throws RemoteException;
-	public void shutdown() throws RemoteException;
+	public void shutdown() throws RemoteException;	
 	public void greenForNextRound() throws RemoteException;
+	public ArrayList<Integer> getHistory(int i_round) throws RemoteException;
 }

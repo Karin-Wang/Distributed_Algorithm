@@ -37,9 +37,9 @@ public class ThreadBroadcast extends Thread {
 		try {
 			//DebugTool.print("delay from "+ senderName_ + " to " + recvName_ + " is over");
 			handle_.recvMessage(sender_, msg_, round_);
-		} catch (RemoteException | InterruptedException e) {
+		} catch (Exception e) {
 			// TODO Auto-generated catch block
-			e.printStackTrace();
+			//e.printStackTrace();
 		}
 	}
 }
