@@ -29,8 +29,8 @@ public class CaptainImpl extends UnicastRemoteObject implements CaptainInterface
 	private int disloyalCapCount_ = 0;
 	private boolean isLoyal_ = false;
 	private boolean isPrepFinished = false;
-	private int chance_send = 0;
-	private int chance_notFasify = 100;
+	private int chance_send = 50;
+	private int chance_notFasify = 50;
 	// Consensus related
 	private int round_ = 0;
 	private boolean decided_ = false;
@@ -56,7 +56,7 @@ public class CaptainImpl extends UnicastRemoteObject implements CaptainInterface
 		genIP_ = in_genIP;
 		isLoyal_ = in_isLoyal;
 		
-		if (randomCheck(99))
+		if (randomCheck(50))
 			localIdea_ = 2;
 		else localIdea_ = 1;
 		
